@@ -1,0 +1,497 @@
+{% extends 'index.html' %}
+
+{% block navbar %}
+    <nav id="nav">
+        <ul>
+            <li><a href="{{url_for('home')}}"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="{{url_for('about')}}"><i class="fas fa-info-circle"></i> About</a></li>
+            <li class="current_page_item"><a style="color: #67E8F9;" href="{{url_for('upload')}}"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+            <li><a href="{{url_for('accuracy')}}"><i class="fas fa-chart-bar"></i> Model Accuracy</a></li>
+            <li><a href="{{url_for('history')}}"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="{{url_for('index')}}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Clean Professional Medical Color Scheme */
+    :root {
+        --primary-teal: #14B8A6;
+        --light-cyan: #67E8F9;
+        --dark-slate: rgba(15, 23, 42, 0.82);
+        --glass: rgba(15, 23, 42, 0.78);
+        --border-teal: rgba(45, 212, 191, 0.45);
+        --text-light: #E2E8F0;
+        --highlight: #14B8A6;
+    }
+
+    .upload-premium {
+        padding: 2rem 0 5rem 0;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .upload-glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        border: 1px solid var(--border-teal);
+        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.65);
+        transition: all 0.3s ease;
+    }
+    .upload-glass-card:hover {
+        box-shadow: 0 25px 50px -15px rgba(0,0,0,0.7);
+        border-color: rgba(103, 232, 249, 0.3);
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    .upload-header h2 {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: var(--text-light);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+    .upload-header h2 i {
+        font-size: 2.6rem;
+        color: var(--primary-teal);
+    }
+    .upload-header p {
+        color: #94A3B8;
+        font-size: 1.15rem;
+        margin-top: 0.6rem;
+        font-weight: 500;
+    }
+
+    /* File input */
+    .file-input-container {
+        max-width: 520px;
+        margin: 2rem auto;
+    }
+    .file-input-premium {
+        width: 100%;
+        height: 58px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 2px solid #334155;
+        border-radius: 9999px;
+        padding: 0 2rem;
+        color: var(--text-light);
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+    }
+    .file-input-premium:hover {
+        border-color: var(--light-cyan);
+        background: rgba(30, 41, 59, 0.95);
+    }
+    .file-input-premium i {
+        color: var(--light-cyan);
+        font-size: 1.4rem;
+    }
+    input[type="file"] {
+        background: transparent;
+        border: none;
+        color: var(--text-light);
+        width: 100%;
+        cursor: pointer;
+    }
+    input[type="file"]::file-selector-button {
+        background: linear-gradient(90deg, #0F766E, #115E59);
+        border: none;
+        padding: 0.75rem 1.8rem;
+        border-radius: 9999px;
+        color: white;
+        font-weight: 600;
+        margin-right: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    input[type="file"]::file-selector-button:hover {
+        background: linear-gradient(90deg, #14B8A6, #2DD4BF);
+        transform: scale(1.03);
+    }
+
+    /* Analyze button */
+    .analyze-btn {
+        background: linear-gradient(90deg, #0F766E, #115E59);
+        border: none;
+        padding: 1rem 3.2rem;
+        border-radius: 9999px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 8px 0 #0F4C4A;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-top: 1.5rem;
+    }
+    .analyze-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 0 #0F4C4A;
+        background: linear-gradient(90deg, #14B8A6, #115E59);
+    }
+    .analyze-btn i {
+        font-size: 1.6rem;
+    }
+
+    /* Results */
+    .results-premium {
+        margin-top: 3rem;
+        animation: fadeUp 0.8s ease forwards;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(25px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid #2DD4BF;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
+    }
+    .prediction-badge {
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: var(--primary-teal);
+        text-align: center;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+    .prediction-badge i {
+        font-size: 2.3rem;
+        color: var(--light-cyan);
+    }
+
+    /* Confidence meter */
+    .confidence-meter {
+        max-width: 480px;
+        margin: 2rem auto;
+    }
+    .meter-label {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-light);
+        font-weight: 600;
+        margin-bottom: 0.6rem;
+    }
+    .progress-bar-bg {
+        height: 28px;
+        background: rgba(0,0,0,0.35);
+        border-radius: 9999px;
+        overflow: hidden;
+        border: 2px solid #2DD4BF;
+    }
+    .progress-fill {
+        height: 100%;
+        line-height: 28px;
+        color: white;
+        font-weight: 700;
+        text-align: center;
+        transition: width 1.2s ease;
+        background: linear-gradient(90deg, #14B8A6, #67E8F9);
+    }
+
+    /* Severity & Prognosis Row */
+    .severity-prognosis-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2rem;
+        margin: 1.8rem 0;
+        padding: 1.2rem;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 9999px;
+    }
+    .severity-box, .prognosis-box {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.15rem;
+        color: #CBD5E1;
+    }
+    .severity-badge {
+        padding: 0.3rem 1.2rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    .severity-none { background: #334155; color: #E2E8F0; }
+    .severity-mild { background: #FBBF24; color: #000; }
+    .severity-moderate { background: #F97316; color: #000; }
+    .severity-severe { background: #EF4444; color: #fff; }
+
+    .prognosis-text {
+        max-width: 300px;
+        font-style: italic;
+        color: #67E8F9;
+    }
+
+    /* Top-3 */
+    .top3-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0 0 0;
+    }
+    .top3-list li {
+        background: rgba(15, 23, 42, 0.6);
+        margin: 0.6rem 0;
+        padding: 0.9rem 1.6rem;
+        border-radius: 9999px;
+        border-left: 6px solid var(--primary-teal);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.1rem;
+    }
+    .top3-list .class-name {
+        font-weight: 600;
+        color: var(--primary-teal);
+    }
+    .top3-list .class-conf {
+        background: #0F766E;
+        color: white;
+        padding: 0.25rem 1.1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+    }
+
+    /* Single block image layout */
+    .image-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3.5rem;
+        margin: 3rem 0;
+    }
+    .image-card-premium {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 1.4rem;
+        border: 1px solid var(--border-teal);
+        width: 100%;
+        max-width: 760px;
+        transition: all 0.3s ease;
+    }
+    .image-card-premium:hover {
+        transform: translateY(-6px);
+        border-color: var(--light-cyan);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    }
+    .image-card-premium h5 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--primary-teal);
+        margin-bottom: 1rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    .image-card-premium img {
+        width: 100%;
+        height: auto;
+        max-height: 520px;
+        object-fit: contain;
+        border-radius: 16px;
+        border: 3px solid #2DD4BF;
+        display: block;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+    .image-card-premium img:hover {
+        border-color: var(--light-cyan);
+        transform: scale(1.015);
+    }
+
+    /* XAI explanation */
+    .xai-explanation {
+        margin-top: 2rem;
+        padding: 1.8rem 2rem;
+        background: rgba(15, 23, 42, 0.55);
+        border-radius: 20px;
+        border-left: 6px solid var(--primary-teal);
+        color: #CBD5E1;
+        font-size: 1.02rem;
+    }
+    .xai-explanation h4 {
+        color: var(--primary-teal);
+        margin-bottom: 0.8rem;
+        font-size: 1.3rem;
+    }
+
+    /* Message */
+    .message-alert {
+        background: rgba(248, 113, 113, 0.15);
+        border: 1px solid #F87171;
+        border-radius: 9999px;
+        padding: 1rem 2rem;
+        color: #FCA5A5;
+        font-size: 1.15rem;
+        margin-bottom: 2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .upload-glass-card {
+            padding: 2rem 1.5rem;
+            margin: 0 1rem;
+        }
+        .upload-header h2 {
+            font-size: 2.3rem;
+        }
+        .severity-prognosis-row {
+            flex-direction: column;
+            align-items: center;
+            border-radius: 40px;
+        }
+    }
+</style>
+
+<section class="upload-premium">
+    <div class="upload-glass-card">
+        <div class="upload-header">
+            <h2>
+                <i class="fas fa-lungs"></i>
+                Chest X‑ray Analysis
+            </h2>
+            <p>
+                <i class="fas fa-brain" style="color: #67E8F9;"></i>
+                Explainable Quantum CNN • Saliency • Q‑CAM • LRP • Severity • Prognosis
+            </p>
+        </div>
+
+        {% if message %}
+            <center>
+                <div class="message-alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ message }}
+                </div>
+            </center>
+        {% endif %}
+
+        {% if prediction %}
+            <div class="results-premium">
+                <div class="result-card">
+                    <div class="prediction-badge">
+                        <i class="fas fa-stethoscope"></i> 
+                        {{ prediction.class }} 
+                        <i class="fas fa-microscope"></i>
+                    </div>
+
+                    <div class="confidence-meter">
+                        <div class="meter-label">
+                            <span>Confidence</span>
+                            <span>{{ prediction.confidence }}</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            {% set conf_value = prediction.confidence|replace('%','')|float %}
+                            <div class="progress-fill" style="width: {{ conf_value }}%;">
+                                {{ prediction.confidence }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: Severity & Prognosis Row -->
+                    <div class="severity-prognosis-row">
+                        <div class="severity-box">
+                            <span style="color: #94A3B8;">Severity:</span>
+                            <span class="severity-badge severity-{{ prediction.severity|lower }}">
+                                {{ prediction.severity }}
+                            </span>
+                        </div>
+                        <div class="prognosis-box">
+                            <span style="color: #94A3B8;">Prognosis:</span>
+                            <span class="prognosis-text">{{ prediction.prognosis }}</span>
+                        </div>
+                    </div>
+
+                    <h4 style="color: #14B8A6; margin: 1.8rem 0 1rem 0; text-align: center;">Top‑3 Predictions</h4>
+                    <ul class="top3-list">
+                        {% for class_name, conf in prediction.top3 %}
+                        <li>
+                            <span class="class-name">{{ class_name }}</span>
+                            <span class="class-conf">{{ conf }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="image-section">
+                    <div class="image-card-premium">
+                        <h5><i class="fas fa-image"></i> Uploaded Chest X‑ray</h5>
+                        <img src="{{ image_path }}" alt="Uploaded X-ray">
+                    </div>
+
+                    <div class="image-card-premium">
+                        <h5><i class="fas fa-chart-pie"></i> XAI Explanation (Q‑CAM + Saliency + LRP)</h5>
+                        <img src="{{ xai_path }}" alt="XAI Composite">
+                    </div>
+                </div>
+
+                <div class="xai-explanation">
+                    <h4><i class="fas fa-lightbulb"></i> How the Model Decided</h4>
+                    <p>The image above highlights the regions the Quantum CNN focused on:</p>
+                    <ul>
+                        <li><span style="color:#14B8A6;">•</span> Saliency Map</li>
+                        <li><span style="color:#14B8A6;">•</span> Quantum Grad‑CAM (Q‑CAM)</li>
+                        <li><span style="color:#14B8A6;">•</span> Layer-wise Relevance Propagation (LRP)</li>
+                        <li><span style="color:#14B8A6;">•</span> Conv Layer Activations</li>
+                    </ul>
+                    <p style="font-size:0.95rem; margin-top:1rem; opacity:0.9;">
+                        These overlays make the AI decision transparent and clinically interpretable.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+
+        <center>
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" style="margin-top: 2.5rem;">
+                <div class="file-input-container">
+                    <div class="file-input-premium">
+                        <i class="fas fa-camera"></i>
+                        <input type="file"
+                               name="file"
+                               accept="image/jpeg,image/png,image/jpg,image/jfif,.jpg"
+                               required>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="analyze-btn">
+                    <i class="fas fa-arrow-circle-right"></i> Analyze X‑ray
+                </button>
+            </form>
+
+            <p style="color: #94A3B8; margin-top: 1.8rem; font-size: 0.95rem;">
+                <i class="fas fa-shield-alt" style="color: #67E8F9;"></i>
+                Supported: JPG, PNG, JFIF • Max 10 MB • XAI visuals & severity assessment generated instantly
+            </p>
+        </center>
+    </div>
+</section>
+{% endblock %}

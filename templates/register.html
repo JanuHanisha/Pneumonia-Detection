@@ -1,0 +1,386 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>QuantumChest · secure registration</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- same unique font as index -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ----- base & global (identical to updated index) ----- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0b1a2f;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #e3f2fd;
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* cyber grid overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* ----- glass header (same as index) ----- */
+        .site-header {
+            padding: 1.2rem 0;
+            margin: 1.5rem 2rem 0 2rem;
+            background: rgba(10, 30, 50, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 60px;
+            border: 1px solid rgba(64, 224, 208, 0.25);
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+            animation: slideInGlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideInGlide {
+            0% { opacity: 0; transform: translateY(-80px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(130deg, #a0f0ea, #7cd6fd, #b79aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.25s ease;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: #4dd0e1;
+            filter: drop-shadow(0 0 6px #00bcd4);
+        }
+
+        .logo:hover {
+            transform: scale(1.02) translateY(-2px);
+            filter: brightness(1.15);
+        }
+
+        /* nav pills – using cyan accent to match upload/accuracy pages */
+        #nav ul {
+            list-style: none;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        #nav ul li a {
+            color: #c1d9f0;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.8rem 1.8rem;
+            border-radius: 40px;
+            background: rgba(20, 50, 70, 0.4);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(80, 210, 230, 0.2);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        #nav ul li a i {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        #nav ul li a:hover {
+            background: rgba(103, 232, 249, 0.15);
+            border-color: #67E8F9;
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(103,232,249,0.2);
+        }
+
+        /* current_page_item with cyan highlight */
+        #nav ul li.current_page_item a {
+            background: linear-gradient(145deg, #0F766E, #115E59);
+            border-color: #67E8F9;
+            color: #67E8F9 !important;
+            font-weight: 700;
+            box-shadow: 0 0 18px rgba(103,232,249,0.5);
+        }
+
+        #nav ul li.current_page_item a i {
+            color: #67E8F9;
+        }
+
+        /* ----- registration section – glass-card, medical theme ----- */
+        .register-unique {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1rem 5rem 1rem;
+            animation: fadeUp 1s ease;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .register-card {
+            background: rgba(15, 35, 55, 0.6);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(45, 212, 191, 0.4);
+            border-radius: 60px;
+            padding: 3.5rem 3rem;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 40px 60px -20px #00000080, 0 0 0 1px #2DD4BF inset, 0 0 30px #14B8A640;
+            transition: box-shadow 0.4s;
+        }
+
+        .register-card:hover {
+            box-shadow: 0 50px 70px -18px #000, 0 0 0 2px #67E8F9 inset, 0 0 40px #67E8F9;
+        }
+
+        .register-card header {
+            text-align: center;
+            margin-bottom: 2.8rem;
+        }
+
+        .register-card header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #E2E8F0;
+            letter-spacing: -0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .register-card header h2 i {
+            font-size: 2.8rem;
+            color: #14B8A6;
+            filter: drop-shadow(0 0 8px #14B8A6AA);
+        }
+
+        /* ----- form fields – glowing inputs (teal-cyan focus) ----- */
+        .input-field {
+            width: 100%;
+            margin-bottom: 1.8rem;
+        }
+
+        .input-field input {
+            width: 100%;
+            height: 65px;
+            background: rgba(8, 40, 55, 0.7);
+            border: 2px solid #2f8090;
+            border-radius: 50px;
+            padding: 0 2rem;
+            font-size: 1.1rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #f0fcff;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 6px #2aa0b0 inset, 0 6px 10px rgba(0,0,0,0.3);
+        }
+
+        .input-field input:focus {
+            border-color: #67E8F9;
+            background: #0b3a4f;
+            box-shadow: 0 0 20px #67E8F9AA, 0 0 0 2px #14B8A6 inset;
+            transform: scale(1.01);
+        }
+
+        .input-field input::placeholder {
+            color: #94A3B8;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        /* submit button – teal-cyan theme */
+        .submit-unique {
+            display: flex;
+            justify-content: center;
+            margin-top: 2.8rem;
+        }
+
+        .btn-register {
+            background: linear-gradient(90deg, #0F766E, #115E59);
+            border: none;
+            padding: 1.3rem 4rem;
+            border-radius: 60px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 0 #0F4C4A, 0 10px 30px #14B8A640;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-register i {
+            font-size: 1.8rem;
+            transition: transform 0.3s;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 0 #0F4C4A, 0 20px 40px #67E8F980;
+            background: linear-gradient(90deg, #14B8A6, #0F766E);
+        }
+
+        .btn-register:hover i {
+            transform: translateX(8px) rotate(5deg);
+        }
+
+        /* footer – medical theme */
+        .site-footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin: 3rem 2rem 1.5rem 2rem;
+            background: rgba(8, 30, 45, 0.6);
+            backdrop-filter: blur(5px);
+            border-radius: 40px;
+            border: 1px solid #2c6b7c;
+            color: #8bb9cc;
+            font-size: 0.95rem;
+        }
+
+        /* responsive */
+        @media (max-width: 600px) {
+            .register-card { padding: 2rem 1.5rem; }
+            .register-card header h2 { font-size: 2.4rem; }
+            .input-field input { height: 55px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- header (consistent with updated landing page) -->
+        <header class="site-header">
+            <div class="header-inner">
+                <a href="{{url_for('index')}}" class="logo">
+                    <i class="fas fa-lungs"></i> Quantum<span style="font-weight:400;">Chest</span>
+                </a>
+                {% block navbar %}
+                <nav id="nav">
+                    <ul>
+                        <li><a href="{{url_for('index')}}"><i class="fas fa-home"></i> Home</a></li>
+                        <li class="current_page_item"><a href="{{url_for('register')}}"><i class="fas fa-user-plus"></i> Register</a></li>
+                        <li><a href="{{url_for('login')}}"><i class="fas fa-key"></i> LogIn</a></li>
+                    </ul>
+                </nav>
+                {% endblock %}
+            </div>
+        </header>
+
+        {% block content %}
+        <!-- registration form – medical / quantum theme -->
+        <section class="register-unique">
+            <div class="register-card">
+                <header>
+                    <h2>
+                        <i class="fas fa-user-md"></i> 
+                        Create Account
+                    </h2>
+                </header>
+
+                <form action="{{url_for('register')}}" method="post">
+                    <div class="input-field">
+                        <input type="text" name="name" placeholder="Full Name" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="email" name="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="c_password" placeholder="Confirm Password" required>
+                    </div>
+
+                    <div class="submit-unique">
+                        <button type="submit" class="btn-register">
+                            <i class="fas fa-user-check"></i> Register
+                        </button>
+                    </div>
+                </form>
+
+                <!-- micro security hint -->
+                <p style="text-align: center; margin-top: 2rem; color: #94A3B8; font-size: 0.95rem;">
+                    <i class="fas fa-shield-alt" style="margin-right: 6px; color: #14B8A6;"></i>
+                    Your data is encrypted • For medical AI research & diagnosis support
+                </p>
+            </div>
+        </section>
+        {% endblock %}
+
+        <!-- footer updated -->
+        <footer class="site-footer">
+            <div class="container">
+                <p><i class="fas fa-atom" style="margin-right: 8px; color: #14B8A6;"></i> 
+                Hybrid Quantum AI for trustworthy pneumonia diagnosis · © 2026 QuantumChest</p>
+            </div>
+        </footer>
+    </div>
+
+    {% if message %}
+    <script>
+        alert("{{message}}");
+    </script>
+    {% endif %}
+
+    <!-- scripts -->
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery.dropotron.min.js"></script>
+    <script src="/static/js/browser.min.js"></script>
+    <script src="/static/js/breakpoints.min.js"></script>
+    <script src="/static/js/util.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

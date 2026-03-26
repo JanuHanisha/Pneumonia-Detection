@@ -1,0 +1,422 @@
+{% extends 'index.html' %}
+{% block navbar %}
+    <nav id="nav">
+        <ul>
+            <li><a href="{{url_for('home')}}"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="{{url_for('about')}}"><i class="fas fa-info-circle"></i> About</a></li>
+            <li><a href="{{url_for('upload')}}"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+            <li class="current_page_item"><a style="color: #67E8F9;" href="{{url_for('accuracy')}}"><i class="fas fa-chart-bar"></i> Model Accuracy</a></li>
+            <li><a href="{{url_for('history')}}"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="{{url_for('index')}}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+{% endblock %}
+{% block content %}
+<style>
+    /* accuracy page premium styles — matched to upload page teal/cyan theme */
+    .accuracy-premium {
+        padding: 2rem 0 4rem 0;
+        animation: fadeScale 1s ease;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    @keyframes fadeScale {
+        0% { opacity: 0; transform: scale(0.97); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    :root {
+        --primary-teal: #14B8A6;
+        --light-cyan: #67E8F9;
+        --dark-slate: rgba(15, 23, 42, 0.82);
+        --glass: rgba(15, 23, 42, 0.78);
+        --border-teal: rgba(45, 212, 191, 0.45);
+        --text-light: #E2E8F0;
+        --highlight: #14B8A6;
+    }
+    /* header glass card */
+    .accuracy-header-card {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        border: 1px solid var(--border-teal);
+        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.65);
+        margin: 0 2rem 2rem 2rem;
+        text-align: center;
+    }
+    .accuracy-header-card h1 {
+        font-size: 3.2rem;
+        font-weight: 800;
+        color: var(--text-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 1rem;
+    }
+    .accuracy-header-card h1 i {
+        color: var(--primary-teal);
+        font-size: 3.2rem;
+    }
+    .accuracy-header-card p {
+        color: #94A3B8;
+        font-size: 1.2rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    /* model grid */
+    .model-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        margin: 2rem;
+    }
+    .model-card {
+        flex: 1 1 350px;
+        max-width: 420px;
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+        padding: 2.2rem;
+        border: 1px solid var(--border-teal);
+        box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
+        transition: all 0.3s ease;
+    }
+    .model-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--light-cyan);
+        box-shadow: 0 25px 50px -15px rgba(0,0,0,0.6);
+    }
+    .model-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.4rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--primary-teal);
+    }
+    .model-header i {
+        font-size: 2.4rem;
+        color: var(--primary-teal);
+    }
+    .model-header h2 {
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: var(--text-light);
+    }
+    .model-badge {
+        display: inline-block;
+        padding: 0.5rem 1.4rem;
+        background: linear-gradient(90deg, #0F766E, #115E59);
+        border-radius: 9999px;
+        color: white;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 1.4rem;
+        border: 1px solid var(--light-cyan);
+    }
+    .accuracy-meter {
+        margin: 1.6rem 0;
+    }
+    .meter-label {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-light);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    .progress-bg {
+        width: 100%;
+        height: 28px;
+        background: rgba(0,0,0,0.35);
+        border-radius: 9999px;
+        overflow: hidden;
+        border: 2px solid var(--primary-teal);
+    }
+    .progress-fill {
+        height: 100%;
+        line-height: 28px;
+        color: white;
+        font-weight: 700;
+        text-align: center;
+        background: linear-gradient(90deg, #14B8A6, #67E8F9);
+        transition: width 1.2s ease;
+    }
+    /* classification table */
+    .table-container {
+        margin: 1.6rem 0;
+        overflow-x: auto;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 16px;
+        padding: 1.2rem;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--text-light);
+    }
+    th {
+        background: rgba(20, 184, 166, 0.2);
+        padding: 0.9rem;
+        font-weight: 700;
+        color: var(--primary-teal);
+        border-bottom: 2px solid var(--primary-teal);
+    }
+    td {
+        padding: 0.8rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border-teal);
+    }
+    tr:hover td {
+        background: rgba(103, 232, 249, 0.08);
+    }
+    .highlight {
+        color: var(--light-cyan);
+        font-weight: 700;
+    }
+    /* comparison section */
+    .comparison-section {
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+        padding: 2.8rem;
+        margin: 2rem;
+        border: 1px solid var(--border-teal);
+        box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
+    }
+    .comparison-section h3 {
+        font-size: 2.2rem;
+        color: var(--primary-teal);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid var(--primary-teal);
+        padding-bottom: 1rem;
+    }
+    .comparison-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+    }
+    .comparison-card {
+        flex: 1 1 280px;
+        background: rgba(15, 23, 42, 0.65);
+        border-radius: 20px;
+        padding: 1.8rem;
+        border: 1px solid var(--border-teal);
+        transition: all 0.3s;
+        text-align: center;
+    }
+    .comparison-card:hover {
+        transform: translateY(-6px);
+        border-color: var(--light-cyan);
+    }
+    .comparison-card h4 {
+        font-size: 1.4rem;
+        color: var(--primary-teal);
+        margin-bottom: 1.2rem;
+    }
+    .comparison-value {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: var(--light-cyan);
+        margin: 1rem 0;
+    }
+    .vs-badge {
+        background: linear-gradient(90deg, #14B8A6, #0F766E);
+        padding: 0.6rem 1.6rem;
+        border-radius: 9999px;
+        color: white;
+        font-weight: 800;
+        margin: 1.2rem 0;
+        display: inline-block;
+    }
+    /* existing models */
+    .existing-models {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.6rem;
+        justify-content: center;
+        margin-top: 2.5rem;
+    }
+    .existing-model-card {
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 20px;
+        padding: 1.8rem;
+        flex: 1 1 220px;
+        border: 1px solid var(--border-teal);
+        transition: all 0.3s;
+        text-align: center;
+    }
+    .existing-model-card:hover {
+        border-color: var(--light-cyan);
+        transform: translateY(-4px);
+    }
+    .existing-model-card i {
+        font-size: 2.2rem;
+        color: var(--primary-teal);
+        margin-bottom: 1rem;
+    }
+    .existing-accuracy {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--light-cyan);
+    }
+    @media (max-width: 768px) {
+        .accuracy-header-card h1 { font-size: 2.6rem; }
+        .model-card { max-width: 100%; }
+    }
+</style>
+
+<section class="accuracy-premium">
+    <!-- Header -->
+    <div class="accuracy-header-card">
+        <h1>
+            <i class="fas fa-microscope"></i>
+            Model Performance Dashboard
+        </h1>
+        <p>
+            <i class="fas fa-brain" style="color: #67E8F9;"></i>
+            Explainable Quantum CNN & QSVM for Chest X-ray Disease Classification • Pneumonia, COVID-19, Normal & more
+        </p>
+    </div>
+
+    <!-- Main Models Grid -->
+    <div class="model-grid">
+        <!-- QCNN Card (Best Quantum Model) -->
+        <div class="model-card">
+            <div class="model-header">
+                <i class="fas fa-atom"></i>
+                <h2>QCNN (Quantum CNN)</h2>
+            </div>
+            <div class="model-badge">
+                <i class="fas fa-crown" style="margin-right: 6px;"></i> Best Quantum Performer
+            </div>
+            <div class="accuracy-meter">
+                <div class="meter-label">
+                    <span>Test Accuracy</span>
+                    <span class="highlight">75.23%</span>
+                </div>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 75.23%;">75.23%</div>
+                </div>
+            </div>
+            <p style="color: #94A3B8; text-align: center; margin-top: 1rem;">
+                Best params: B=0.01, C=2, r=0.1, e=0.01<br>Final Training Loss: 0.315
+            </p>
+            <div class="xai-explanation" style="margin-top: 1.5rem; font-size: 1rem;">
+                <h4 style="color: var(--primary-teal);"><i class="fas fa-lightbulb"></i> Quantum Advantages</h4>
+                <ul style="padding-left: 1.4rem;">
+                    <li>Q-CAM, Saliency & LRP explainability</li>
+                    <li>Enhanced feature extraction in high-dimensional X-rays</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- QSVM (MobileNet) Card -->
+        <div class="model-card">
+            <div class="model-header">
+                <i class="fas fa-atom"></i>
+                <h2>QSVM (Quantum SVM)</h2>
+            </div>
+            <div class="model-badge">
+                <i class="fas fa-bolt" style="margin-right: 6px;"></i> Quantum Kernel
+            </div>
+            <div class="accuracy-meter">
+                <div class="meter-label">
+                    <span>Test Accuracy</span>
+                    <span class="highlight">85.21%</span>
+                </div>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 85.21%;">85.21%</div>
+                </div>
+            </div>
+            <div class="accuracy-meter" style="margin-top: 1.2rem;">
+                <div class="meter-label">
+                    <span>Best Validation Accuracy</span>
+                    <span class="highlight">92.11%</span>
+                </div>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 92.11%;">92.11%</div>
+                </div>
+            </div>
+            <p style="color: #94A3B8; text-align: center; margin-top: 1rem;">
+                Best params: C=1, gamma='scale'<br>MobileNet feature extractor
+            </p>
+        </div>
+
+        <!-- Classical CNN Baseline (for comparison) -->
+        <div class="model-card">
+            <div class="model-header">
+                <i class="fas fa-brain"></i>
+                <h2>Classical CNN</h2>
+            </div>
+            <div class="model-badge">
+                <i class="fas fa-cog" style="margin-right: 6px;"></i> Classical Baseline
+            </div>
+            <div class="accuracy-meter">
+                <div class="meter-label">
+                    <span>Typical Test Accuracy</span>
+                    <!-- <span class="highlight">~90-98%</span> -->
+                </div>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 72.63%;">72.63%</div>
+                </div>
+            </div>
+            <p style="color: #94A3B8; text-align: center; margin: 1.2rem 0;">
+                (DenseNet/MobileNet style models on similar chest X-ray tasks)
+            </p>
+        </div>
+    </div>
+
+    <!-- Model Comparison Section -->
+    <div class="comparison-section">
+        <h3>
+            <i class="fas fa-balance-scale"></i>
+            Quantum vs Classical Comparison
+        </h3>
+        <div class="comparison-grid">
+            <div class="comparison-card">
+                <h4>QCNN vs QSVM</h4>
+                <div class="comparison-value">+10%</div>
+                <div class="comparison-label">QSVM leads on test set</div>
+                <div class="vs-badge">VS</div>
+                <div style="display: flex; justify-content: space-around; margin-top: 1.2rem;">
+                    <div><span class="highlight">75.23%</span><br><small>QCNN</small></div>
+                    <div><span class="highlight">85.21%</span><br><small>QSVM</small></div>
+                </div>
+            </div>
+            <div class="comparison-card">
+                <h4>QSVM vs Classical</h4>
+                <div class="comparison-value">Competitive</div>
+                <div class="comparison-label">Quantum kernel advantage in feature space</div>
+                <div class="vs-badge">VS</div>
+                <div style="display: flex; justify-content: space-around; margin-top: 1.2rem;">
+                    <div><span class="highlight">85-92%</span><br><small>QSVM</small></div>
+                    <div><span class="highlight">70-75%</span><br><small>Classical CNN</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Summary -->
+        <div style="margin-top: 2.8rem; padding: 1.8rem; background: rgba(15, 23, 42, 0.5); border-radius: 20px;">
+            <h3 style="color: var(--primary-teal); margin-bottom: 1.2rem;">Key Insights</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; text-align: left;">
+                <div style="flex: 1 1 280px;">
+                    <p><i class="fas fa-check-circle" style="color: var(--primary-teal);"></i> QSVM achieves strong <span class="highlight">85-92%</span> accuracy with quantum kernels</p>
+                    <p><i class="fas fa-check-circle" style="color: var(--primary-teal);"></i> QCNN brings unique XAI (Q-CAM, Saliency, LRP)</p>
+                </div>
+                <div style="flex: 1 1 280px;">
+                    <p><i class="fas fa-atom" style="color: var(--primary-teal);"></i> Quantum models offer explainability & potential future scaling advantages</p>
+                    <p><i class="fas fa-shield-alt" style="color: var(--primary-teal);"></i> Competitive with classical SOTA on chest X-ray tasks</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

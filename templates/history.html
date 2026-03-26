@@ -1,0 +1,398 @@
+{% extends 'index.html' %}
+
+{% block navbar %}
+    <nav id="nav">
+        <ul>
+            <li><a href="{{url_for('home')}}"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="{{url_for('about')}}"><i class="fas fa-info-circle"></i> About</a></li>
+            <li><a href="{{url_for('upload')}}"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+            <li class="current_page_item"><a style="color: #67E8F9;" href="{{url_for('history')}}"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="{{url_for('accuracy')}}"><i class="fas fa-chart-bar"></i> Model Accuracy</a></li>
+            <li><a href="{{url_for('index')}}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-teal: #14B8A6;
+        --light-cyan: #67E8F9;
+        --glass: rgba(15, 23, 42, 0.78);
+        --border-teal: rgba(45, 212, 191, 0.45);
+        --text-light: #E2E8F0;
+    }
+
+    .history-premium {
+        padding: 2.5rem 0 5rem 0;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .history-header-card {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 2.8rem 2rem;
+        border: 1px solid var(--border-teal);
+        text-align: center;
+        margin: 0 1.5rem 2.5rem;
+    }
+    .history-header-card h1 {
+        font-size: 2.9rem;
+        font-weight: 700;
+        color: var(--text-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+    }
+    .history-header-card h1 i { font-size: 2.7rem; color: var(--primary-teal); }
+
+    .stats-grid {
+        display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin: 0 1.5rem 2.5rem;
+    }
+    .stat-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border-radius: 20px;
+        padding: 1.8rem 2rem;
+        border: 1px solid var(--border-teal);
+        text-align: center;
+        flex: 1 1 200px;
+        transition: all 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-6px); border-color: var(--light-cyan); }
+
+    .stat-icon { font-size: 2.3rem; color: var(--light-cyan); margin-bottom: 0.6rem; }
+    .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--primary-teal); }
+    .stat-label { color: #94A3B8; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .filter-section {
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+        padding: 1.6rem 2rem;
+        margin: 0 1.5rem 2.5rem;
+        border: 1px solid var(--border-teal);
+        display: flex; flex-wrap: wrap; gap: 1.2rem; justify-content: center;
+    }
+    .filter-group {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: 0.6rem 1.4rem;
+        border-radius: 9999px;
+        border: 1px solid #2DD4BF;
+    }
+    .filter-group i { color: var(--light-cyan); font-size: 1.2rem; }
+
+    .filter-btn {
+        background: linear-gradient(90deg, #0F766E, #115E59);
+        border: none; padding: 0.85rem 2rem; border-radius: 9999px;
+        color: white; font-weight: 600; cursor: pointer;
+        transition: all 0.3s;
+    }
+    .filter-btn:hover { transform: translateY(-3px); background: linear-gradient(90deg, #14B8A6, #115E59); }
+
+    .table-container-premium {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+        padding: 2rem;
+        margin: 0 1.5rem 2.5rem;
+        border: 1px solid var(--border-teal);
+        overflow-x: auto;
+    }
+    .history-table {
+        width: 100%; border-collapse: collapse; color: #CBD5E1;
+    }
+    .history-table th {
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--primary-teal);
+        padding: 1.1rem 1rem;
+        border-bottom: 2px solid #2DD4BF;
+        text-align: left;
+    }
+    .history-table td {
+        padding: 1.1rem 1rem;
+        border-bottom: 1px solid rgba(45,212,191,0.2);
+    }
+    .history-table tr:hover td { background: rgba(103, 232, 249, 0.08); }
+
+    .thumbnail-img {
+        width: 78px; 
+        height: 58px; 
+        object-fit: cover;
+        border-radius: 12px; 
+        border: 2px solid #2DD4BF;
+        transition: all 0.3s;
+    }
+    .thumbnail-img:hover { 
+        border-color: var(--light-cyan); 
+        transform: scale(1.08); 
+    }
+
+    .status-badge {
+        padding: 0.35rem 1rem; 
+        border-radius: 9999px; 
+        font-weight: 600; 
+        font-size: 0.9rem;
+        display: inline-flex; 
+        align-items: center; 
+        gap: 6px;
+    }
+    .badge-abnormal { background: rgba(248,113,113,0.2); border: 1px solid #F87171; color: #FCA5A5; }
+    .badge-normal   { background: rgba(52,211,153,0.2); border: 1px solid #34D399; color: #6EE7B7; }
+
+    .severity-badge {
+        padding: 0.2rem 0.8rem;
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    .severity-none { background: #334155; color: #CBD5E1; }
+    .severity-mild { background: #FBBF24; color: #000; }
+    .severity-moderate { background: #F97316; color: #000; }
+    .severity-severe { background: #EF4444; color: #fff; }
+
+    .prognosis-tooltip {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed var(--light-cyan);
+    }
+    .prognosis-tooltip .tooltiptext {
+        visibility: hidden;
+        width: 240px;
+        background-color: #1E293B;
+        color: #E2E8F0;
+        text-align: center;
+        border-radius: 8px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -120px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        border: 1px solid var(--border-teal);
+        font-size: 0.9rem;
+    }
+    .prognosis-tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .action-icons i {
+        cursor: pointer; 
+        font-size: 1.25rem; 
+        color: #94A3B8; 
+        transition: all 0.2s;
+        margin: 0 5px;
+    }
+    .action-icons i:hover { color: var(--light-cyan); transform: scale(1.15); }
+
+    .empty-state {
+        text-align: center; 
+        padding: 5rem 2rem; 
+        color: #94A3B8;
+    }
+    .empty-state i { font-size: 4.8rem; color: var(--light-cyan); margin-bottom: 1rem; }
+
+    @media (max-width: 768px) {
+        .stats-grid .stat-card { flex: 1 1 100%; }
+        .filter-section { flex-direction: column; align-items: stretch; }
+    }
+</style>
+
+<section class="history-premium">
+    <div class="history-header-card">
+        <h1><i class="fas fa-history"></i> Analysis History</h1>
+        <p>Track all your chest X-ray predictions with severity & prognosis</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-images"></i></div>
+            <div class="stat-value">{{ stats.total|default(0) }}</div>
+            <div class="stat-label">Total Analyses</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle" style="color: #F87171;"></i></div>
+            <div class="stat-value">{{ stats.abnormal|default(0) }}</div>
+            <div class="stat-label">Abnormal Cases</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-circle" style="color: #34D399;"></i></div>
+            <div class="stat-value">{{ stats.normal|default(0) }}</div>
+            <div class="stat-label">Normal Cases</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+            <div class="stat-value">{{ stats.this_month|default(0) }}</div>
+            <div class="stat-label">This Month</div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-group">
+            <i class="fas fa-calendar-alt"></i>
+            <select id="dateFilter">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <i class="fas fa-tag"></i>
+            <select id="statusFilter">
+                <option value="all">All Results</option>
+                <option value="abnormal">Abnormal</option>
+                <option value="normal">Normal</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search by filename..." id="searchInput">
+        </div>
+
+        <button class="filter-btn" onclick="applyFilters()">
+            <i class="fas fa-filter"></i> Apply Filters
+        </button>
+        <button class="filter-btn reset-btn" onclick="resetFilters()">
+            <i class="fas fa-redo"></i> Reset
+        </button>
+        <button class="filter-btn clear-all-btn" onclick="clearAllHistory()">
+            <i class="fas fa-trash-alt"></i> Clear All
+        </button>
+    </div>
+
+    <div class="table-container-premium">
+        {% if history and history|length > 0 %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Preview</th>
+                    <th>Filename</th>
+                    <th>Date & Time</th>
+                    <th>Prediction</th>
+                    <th>Confidence</th>
+                    <th>Severity</th>
+                    <th>Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in history %}
+                <tr>
+                    <td>
+                        <img src="{{ item.image_path }}" 
+                             alt="X-ray preview" 
+                             class="thumbnail-img">
+                    </td>
+                    <td>{{ item.filename }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>
+                        {% if item.predicted_class == 'NORMAL' %}
+                        <span class="status-badge badge-normal"><i class="fas fa-check-circle"></i> Normal</span>
+                        {% else %}
+                        <span class="status-badge badge-abnormal"><i class="fas fa-exclamation-triangle"></i> {{ item.predicted_class }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.confidence }}</td>
+                    <td>
+                        <span class="severity-badge severity-{{ item.severity|lower }}">
+                            {{ item.severity }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="prognosis-tooltip">
+                            <i class="fas fa-info-circle" style="color: #67E8F9;"></i>
+                            <span class="tooltiptext">{{ item.prognosis }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-icons">
+                            <i class="fas fa-eye" title="View Details" onclick="viewAnalysis({{ item.id }})"></i>
+                            <i class="fas fa-download" title="Download Report" onclick="downloadReport({{ item.id }})"></i>
+                            <i class="fas fa-trash" title="Delete" onclick="deleteAnalysis({{ item.id }})"></i>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h3>No Analysis History Yet</h3>
+            <p>Upload your first chest X-ray to begin tracking results</p>
+            <a href="{{url_for('upload')}}" class="filter-btn" style="margin-top: 1.5rem; display: inline-flex;">
+                <i class="fas fa-cloud-upload-alt"></i> Start Analysis
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    function applyFilters() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('.history-table tbody tr');
+        rows.forEach(row => {
+            let show = true;
+            if (statusFilter !== 'all') {
+                const isAbnormal = row.querySelector('.badge-abnormal') !== null;
+                if (statusFilter === 'abnormal' && !isAbnormal) show = false;
+                if (statusFilter === 'normal' && isAbnormal) show = false;
+            }
+            if (searchTerm) {
+                const filename = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                if (!filename.includes(searchTerm)) show = false;
+            }
+            // date filter can be implemented similarly if needed
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    function resetFilters() {
+        document.getElementById('dateFilter').value = 'all';
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('searchInput').value = '';
+        document.querySelectorAll('.history-table tbody tr').forEach(r => r.style.display = '');
+    }
+
+    function viewAnalysis(id) {
+        window.location.href = "{{ url_for('view_analysis', analysis_id=0) }}".replace('0', id);
+    }
+    function downloadReport(id) {
+        window.location.href = "{{ url_for('download_report', analysis_id=0) }}".replace('0', id);
+    }
+    function deleteAnalysis(id) {
+        if (confirm('Delete this analysis?')) {
+            fetch("{{ url_for('delete_analysis', analysis_id=0) }}".replace('0', id), { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else alert('Error: ' + data.message);
+                });
+        }
+    }
+    function clearAllHistory() {
+        if (confirm('Clear ALL history permanently?')) {
+            fetch("{{ url_for('clear_history') }}", { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else alert('Error: ' + data.message);
+                });
+        }
+    }
+
+    document.getElementById('dateFilter').addEventListener('change', applyFilters);
+</script>
+{% endblock %}

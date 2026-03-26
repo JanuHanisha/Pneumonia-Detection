@@ -1,0 +1,268 @@
+{% extends 'index.html' %}
+
+{% block navbar %}
+    <nav id="nav">
+        <ul>
+            <li><a href="{{url_for('home')}}"><i class="fas fa-home"></i> Home</a></li>
+            <li class="current_page_item"><a style="color: #67E8F9;" href="{{url_for('about')}}"><i class="fas fa-info-circle"></i> About</a></li>
+            <li><a href="{{url_for('upload')}}"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+            <li><a href="{{url_for('accuracy')}}">Model Accuracy</a></li>
+            <li><a href="{{url_for('history')}}"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="{{url_for('index')}}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Clean Professional About Page - Image Box Removed */
+    :root {
+        --primary-teal: #14B8A6;
+        --light-cyan: #67E8F9;
+        --dark-slate: rgba(15, 23, 42, 0.82);
+        --glass: rgba(15, 23, 42, 0.78);
+        --border-teal: rgba(45, 212, 191, 0.45);
+        --text-light: #E2E8F0;
+    }
+
+    .about-premium {
+        padding: 3rem 0 5rem 0;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .about-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3rem;
+        align-items: stretch;
+        margin: 0 1.5rem;
+    }
+
+    .image-column {
+        flex: 1 1 520px;
+        min-width: 300px;
+    }
+
+    .text-column {
+        flex: 1 1 520px;
+        min-width: 300px;
+    }
+
+    /* Image - NO BOX, full clean display */
+    .about-image {
+        width: 100%;
+        height: auto;
+        max-height: 620px;
+        object-fit: contain;           /* Changed to 'contain' so full image is visible without cropping */
+        border-radius: 20px;
+        border: 3px solid #2DD4BF;
+        display: block;
+        margin-bottom: 1rem;
+        box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5);
+        transition: all 0.4s ease;
+    }
+    .about-image:hover {
+        border-color: var(--light-cyan);
+        transform: scale(1.02);
+        box-shadow: 0 20px 45px -10px rgba(0,0,0,0.6);
+    }
+
+    .image-caption {
+        text-align: center;
+        color: #94A3B8;
+        font-size: 0.98rem;
+        font-weight: 500;
+        padding: 0 1rem;
+    }
+    .image-caption i {
+        color: var(--light-cyan);
+        margin-right: 8px;
+    }
+
+    /* Text card (unchanged) */
+    .text-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+        padding: 2.8rem;
+        border: 1px solid var(--border-teal);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s ease;
+    }
+    .text-card:hover {
+        border-color: var(--light-cyan);
+        box-shadow: 0 25px 50px -15px rgba(0,0,0,0.6);
+    }
+
+    .text-card h2 {
+        font-size: 2.9rem;
+        font-weight: 700;
+        color: var(--text-light);
+        margin-bottom: 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .text-card h2 i {
+        font-size: 2.7rem;
+        color: var(--primary-teal);
+    }
+
+    .about-text {
+        color: #CBD5E1;
+        font-size: 1.08rem;
+        line-height: 1.85;
+        flex: 1;
+    }
+    .about-text p {
+        margin-bottom: 1.4rem;
+    }
+    .about-text strong {
+        color: var(--primary-teal);
+        font-weight: 600;
+    }
+
+    .tech-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem;
+        margin: 2rem 0;
+    }
+    .tech-tag {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1.5px solid #2DD4BF;
+        border-radius: 9999px;
+        padding: 0.65rem 1.4rem;
+        font-size: 0.97rem;
+        font-weight: 600;
+        color: #CBD5E1;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        transition: all 0.3s ease;
+    }
+    .tech-tag:hover {
+        background: #14B8A6;
+        color: white;
+        border-color: var(--light-cyan);
+        transform: translateY(-3px);
+    }
+    .tech-tag i {
+        color: var(--light-cyan);
+    }
+
+    .cta-section {
+        margin-top: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.8rem;
+        align-items: center;
+    }
+    .cta-btn {
+        background: linear-gradient(90deg, #0F766E, #115E59);
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 9999px;
+        color: white;
+        font-weight: 700;
+        font-size: 1.15rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 0 #0F4C4A;
+    }
+    .cta-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 0 #0F4C4A;
+        background: linear-gradient(90deg, #14B8A6, #115E59);
+    }
+
+    .trust-badge {
+        color: #94A3B8;
+        font-size: 1.02rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .about-grid {
+            margin: 0 1rem;
+        }
+        .text-card h2 {
+            font-size: 2.4rem;
+        }
+        .about-image {
+            max-height: 420px;
+        }
+    }
+</style>
+
+<section class="about-premium">
+    <div class="about-grid">
+        <!-- Left: Updated Image -->
+        <div class="image-column">
+            <img src="https://media.istockphoto.com/id/472154843/photo/doctor-checking-x-ray.webp?a=1&b=1&s=612x612&w=0&k=20&c=vtdcv11TeKmoTJTNY23JT80qvbI-8F1F9ts7Dg7NfRQ=" 
+                 alt="Doctor checking X-ray image" 
+                 class="about-image">
+            <div class="image-caption">
+                <i class="fas fa-lungs"></i> 
+                Multi-class Chest X-ray Dataset • Hybrid Quantum Model
+            </div>
+        </div>
+
+        <!-- Right: Content -->
+        <div class="text-column">
+            <div class="text-card">
+                <h2>
+                    <i class="fas fa-brain"></i> 
+                    About Hybrid Quantum
+                </h2>
+
+                <div class="about-text">
+                    <p>
+                        The rise of respiratory diseases such as <strong>Pneumonia</strong>, <strong>COVID-19</strong>, and <strong>Tuberculosis</strong> highlights the urgent need for advanced, accurate, and transparent diagnostic systems.
+                    </p>
+                    <p>
+                        <strong>Hybrid Quantum</strong> is a novel hybrid deep learning framework designed for multi-class medical image classification and severity assessment of chest X-ray images. The system classifies images into four categories: 
+                        <strong>Normal</strong>, <strong>Pneumonia</strong>, <strong>COVID-19</strong>, and <strong>Tuberculosis</strong>.
+                    </p>
+                    <p>
+                        It combines <strong>Convolutional Neural Networks (CNN)</strong> for powerful spatial feature extraction with <strong>Quantum Support Vector Machine (QSVM)</strong> for final classification. 
+                        The quantum component enhances decision boundaries and convergence speed compared to classical SVMs.
+                    </p>
+                    <p>
+                        The framework also provides <strong>severity assessment</strong> through confidence scoring and integrates <strong>Explainable Quantum AI (XQAI)</strong> — including saliency maps, Q-CAM, and LRP — so clinicians can clearly understand and trust the model’s decisions.
+                    </p>
+                    <p>
+                        Initial evaluations on diverse chest X-ray datasets demonstrate high classification accuracy, computational efficiency, and strong potential for real-time clinical decision support in healthcare.
+                    </p>
+                </div>
+
+                <div class="tech-tags">
+                    <span class="tech-tag"><i class="fas fa-layer-group"></i> CNN Feature Extraction</span>
+                    <span class="tech-tag"><i class="fas fa-atom"></i> Quantum SVM (QSVM)</span>
+                    <span class="tech-tag"><i class="fas fa-lightbulb"></i> Explainable Quantum AI</span>
+                    <span class="tech-tag"><i class="fas fa-x-ray"></i> Chest X-ray Multi-class</span>
+                    <span class="tech-tag"><i class="fas fa-chart-bar"></i> Severity & Confidence Scoring</span>
+                </div>
+
+                <div class="cta-section">
+                    <a href="{{url_for('upload')}}" class="cta-btn">
+                        <i class="fas fa-cloud-upload-alt"></i> Start X-ray Analysis
+                    </a>
+                    <span class="trust-badge">
+                        <i class="fas fa-shield-alt" style="color: #67E8F9;"></i>
+                        Fully Explainable • Clinically Interpretable
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

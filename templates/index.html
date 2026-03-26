@@ -1,0 +1,467 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>QuantumChest: Explainable Pneumonia Detection</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- modern unique font: plus jakarta sans (clean & geometric) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- font awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ---------- reset & base ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0b1a2f;  /* deep ocean night */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #e3f2fd;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- cyber grid overlay (subtle but dynamic) --- */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* main content lives above grid */
+        .wrapper {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* ---------- unique header : floating glass + micro animations ---------- */
+        .site-header {
+            padding: 1.2rem 0;
+            margin: 1.5rem 2rem 0 2rem;
+            background: rgba(10, 30, 50, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 60px;
+            border: 1px solid rgba(64, 224, 208, 0.25); /* turquoise accent */
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+            animation: slideInGlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideInGlide {
+            0% { opacity: 0; transform: translateY(-80px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(130deg, #a0f0ea, #7cd6fd, #b79aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.25s ease;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: #4dd0e1;
+            filter: drop-shadow(0 0 6px #00bcd4);
+        }
+
+        .logo:hover {
+            transform: scale(1.02) translateY(-2px);
+            filter: brightness(1.15);
+        }
+
+        /* ------ nav with morph pills ------ */
+        #nav ul {
+            list-style: none;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        #nav ul li a {
+            color: #c1d9f0;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.8rem 1.8rem;
+            border-radius: 40px;
+            background: rgba(20, 50, 70, 0.4);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(80, 210, 230, 0.2);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        #nav ul li a i {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        #nav ul li a:hover {
+            background: rgba(0, 191, 255, 0.2);
+            border-color: #40e0d0;
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,255,200,0.15);
+        }
+
+        #nav ul li.current_page_item a {
+            background: linear-gradient(145deg, #005f6b, #003d4d);
+            border-color: #64ffda;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 0 15px #00b8b8;
+        }
+
+        /* ---------- hero section : totally new geometry ---------- */
+        .hero-unique {
+            padding: 5rem 0 7rem 0;
+            display: flex;
+            align-items: center;
+            min-height: 70vh;
+        }
+
+        .hero-grid {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 3rem;
+        }
+
+        .hero-content {
+            flex: 1 1 500px;
+            animation: floatUp 1s ease-out;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-content .tagline {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 600;
+            color: #6dd5ed;
+            border-left: 5px solid #48d1cc;
+            padding-left: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px #40e0d0;
+        }
+
+        .hero-content h2 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.2;
+            background: linear-gradient(to right, #e0f2fe, #bae6fd, #a5f3fc, #99f6e4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.8rem;
+            max-width: 800px;
+        }
+
+        .hero-content h2 strong {
+            font-weight: 800;
+            background: linear-gradient(145deg, #f0fff0, #b0f0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.2rem;
+            color: #b0d4e8;
+            margin-bottom: 2.8rem;
+            max-width: 600px;
+            backdrop-filter: blur(2px);
+        }
+
+        /* ----- buttons (unique 3D tilt + glow) ------ */
+        .button-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            align-items: center;
+        }
+
+        .btn-unique {
+            padding: 1.1rem 3rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-unique i {
+            font-size: 1.3rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0891b2, #0e7490, #155e75);
+            color: #ffffff;
+            box-shadow: 0 8px 0 #022b36, 0 10px 25px #00acc1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 0 #022b36, 0 15px 30px #00bcd4;
+            background: linear-gradient(135deg, #0aa0c5, #1a8da0);
+        }
+
+        .btn-secondary {
+            background: rgba(16, 40, 58, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid #48b5d0;
+            color: #e0ffff;
+            box-shadow: 0 5px 15px rgba(0,255,200,0.1);
+        }
+
+        .btn-secondary:hover {
+            background: #1c4e6e;
+            border-color: #7fffd4;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px #00e5ff;
+        }
+
+        /* ------ floating visual card (right side) ------ */
+        .hero-visual {
+            flex: 1 1 300px;
+            display: flex;
+            justify-content: center;
+            animation: softPulse 6s infinite alternate ease-in-out;
+        }
+
+        @keyframes softPulse {
+            0% { transform: scale(1); opacity: 0.9; }
+            100% { transform: scale(1.02); opacity: 1; }
+        }
+
+        .insight-card {
+            background: rgba(15, 40, 55, 0.5);
+            backdrop-filter: blur(12px);
+            padding: 2.5rem 2rem;
+            border-radius: 40px;
+            border: 1px solid rgba(72, 202, 228, 0.5);
+            box-shadow: 0 30px 40px -15px black, 0 0 30px #1e90ff40;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .insight-card h3 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #b3f0ff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insight-card ul {
+            list-style: none;
+        }
+
+        .insight-card li {
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px dashed #48b5d055;
+            padding-bottom: 0.8rem;
+        }
+
+        .insight-card li i {
+            font-size: 1.8rem;
+            color: #4fd1c5;
+            width: 2rem;
+        }
+
+        .metric {
+            font-size: 1.1rem;
+            color: #cedcea;
+        }
+
+        .metric span {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #feec80, #b0ffb0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ---------- footer (new micro detail) ---------- */
+        .site-footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin: 3rem 2rem 1.5rem 2rem;
+            background: rgba(8, 30, 45, 0.6);
+            backdrop-filter: blur(5px);
+            border-radius: 40px;
+            border: 1px solid #2c6b7c;
+            color: #8bb9cc;
+            font-size: 0.95rem;
+        }
+
+        /* responsive touches */
+        @media (max-width: 700px) {
+            .header-inner { flex-direction: column; gap: 1rem; }
+            .hero-content h2 { font-size: 2.4rem; }
+            .site-header { margin: 0.8rem; }
+            .btn-unique { padding: 0.9rem 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- header with floating glass effect -->
+        <header class="site-header">
+            <div class="header-inner">
+                <a href="{{url_for('index')}}" class="logo">
+                    <i class="fas fa-lungs"></i> Quantum<span style="font-weight:400;">Chest</span>
+                </a>
+                {% block navbar %}
+                <nav id="nav">
+                    <ul>
+                        <li class="current_page_item"><a href="{{url_for('index')}}"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="{{url_for('register')}}"><i class="fas fa-user-plus"></i> Register</a></li>
+                        <li><a href="{{url_for('login')}}"><i class="fas fa-key"></i> LogIn</a></li>
+                    </ul>
+                </nav>
+                {% endblock %}
+            </div>
+        </header>
+
+        {% block content %}
+        <!-- hero section: quantum medical theme -->
+        <section class="hero-unique">
+            <div class="container">
+                <div class="hero-grid">
+                    <!-- left content -->
+                    <div class="hero-content">
+                        <div class="tagline">
+                            <i class="fas fa-brain" style="margin-right: 8px;"></i> explainable quantum AI · pneumonia diagnosis
+                        </div>
+                        <h2>
+                            <strong>Hybrid Quantum-Convolutional Neural Network</strong> vs Classical CNN for Pneumonia Detection from Chest X-rays
+                        </h2>
+                        <p class="hero-desc">
+                            Leverage QCNN with Q-CAM, Saliency & LRP for transparent, high-confidence diagnosis. 
+                            Quantum-enhanced feature extraction brings explainability and potential advantages in limited-data medical scenarios.
+                        </p>
+                        <div class="button-panel">
+                            <a href="{{url_for('register')}}" class="btn-unique btn-primary">
+                                <i class="fas fa-rocket"></i> Get started
+                            </a>
+                            <a href="{{url_for('login')}}" class="btn-unique btn-secondary">
+                                <i class="fas fa-flask"></i> LogIn
+                            </a>
+                        </div>
+                        <!-- tech tags updated -->
+                        <div style="margin-top: 3rem; display: flex; gap: 20px; color: #68c8e0; font-size: 0.95rem; flex-wrap: wrap;">
+                            <span><i class="fas fa-atom" style="color:#15e5c5;"></i> Hybrid QCNN + Quantum Kernel</span>
+                            <span><i class="fas fa-check-circle" style="color:#15e5c5;"></i> Chest X-ray Datasets</span>
+                            <span><i class="fas fa-check-circle" style="color:#15e5c5;"></i> Up to 85–98% reported accuracy</span>
+                        </div>
+                    </div>
+
+                    <!-- right side: inference example card -->
+                    <div class="hero-visual">
+                        <div class="insight-card">
+                            <h3><i class="fas fa-stethoscope"></i> Sample Inference</h3>
+                            <ul>
+                                <li>
+                                    <i class="fas fa-lungs-virus"></i>
+                                    <div class="metric">Pneumonia <span>0.87</span></div>
+                                </li>
+                                <li>
+                                    <i class="fas fa-user-md"></i>
+                                    <div class="metric">Normal <span>0.13</span></div>
+                                </li>
+                            </ul>
+                            <div style="margin-top: 1rem; background: #123d4d; border-radius: 60px; padding: 0.5rem 1rem; text-align: center; border: 1px solid #49a5b0;">
+                                <i class="fas fa-microscope"></i> Q-CAM + Saliency heatmap ready
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endblock %}
+
+        <!-- footer updated -->
+        <footer class="site-footer">
+            <div class="container">
+                <p><i class="fas fa-atom" style="margin-right: 8px;"></i> Hybrid Quantum AI for trustworthy pneumonia diagnosis · © 2026 QuantumChest</p>
+            </div>
+        </footer>
+    </div>
+
+    {% if message %}
+    <script>
+        alert("{{message}}");
+    </script>
+    {% endif %}
+
+    <!-- scripts (keep your existing ones) -->
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery.dropotron.min.js"></script>
+    <script src="/static/js/browser.min.js"></script>
+    <script src="/static/js/breakpoints.min.js"></script>
+    <script src="/static/js/util.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
